@@ -21,7 +21,7 @@ def anchor(parser, token):
     """
     bits = [b.strip('"\'') for b in token.split_contents()]
     if len(bits) < 2:
-        raise TemplateSyntaxError, "anchor tag takes at least 1 argument"
+        raise TemplateSyntaxError("anchor tag takes at least 1 argument")
     try:
         title = bits[2]
     except IndexError:
@@ -79,7 +79,7 @@ class SortAnchorNode(template.Node):
 def autosort(parser, token):
     bits = [b.strip('"\'') for b in token.split_contents()]
     if len(bits) != 2:
-        raise TemplateSyntaxError, "autosort tag takes exactly one argument"
+        raise TemplateSyntaxError("autosort tag takes exactly one argument")
     return SortedDataNode(bits[1])
 
 class SortedDataNode(template.Node):
