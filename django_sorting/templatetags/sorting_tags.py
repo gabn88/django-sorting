@@ -79,7 +79,7 @@ class SortAnchorNode(template.Node):
 def autosort(parser, token):
     bits = [b.strip('"\'') for b in token.split_contents()]
     if len(bits) != 2:
-        raise TemplateSyntaxError("autosort tag takes exactly one argument")
+        raise template.TemplateSyntaxError("autosort tag takes exactly one argument")
     return SortedDataNode(bits[1])
 
 class SortedDataNode(template.Node):
