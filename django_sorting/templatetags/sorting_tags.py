@@ -72,6 +72,8 @@ class SortAnchorNode(template.Node):
             self.title = self.title.resolve(context).strip()
         except template.VariableDoesNotExist:
             self.title = str(self.title.var).strip()
+        except AttributeError:
+            self.title = str(self.title)
 
         if icon:
             title = "%s %s" % (self.title, icon)
