@@ -45,13 +45,19 @@ class SortAnchorNode(template.Node):
         self.title = template.Variable(title)
 
     def render(self, context):
-        self.rendered_field = self.field.resolve(context)
+        try:
+            self.rendered_field = self.field.resolve(context)
+        except template.VariableDoesNotExist:
+            self.rendered_field = str(self.field)
         try:
             self.rendered_title = self.title.resolve(context)
         except template.VariableDoesNotExist:
-            self.rendered_title = self.title
+            self.rendered_title = str(self.title)
         except AttributeError:
-            self.rendered_title = self.title
+            self.rendered_title = str(self.title)
+
+        self.rendered_title = self.rendered_title.capitalize()
+
         request = context['request']
         getvars = request.GET.copy()
         if 'sort' in getvars:
