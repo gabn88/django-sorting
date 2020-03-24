@@ -18,15 +18,14 @@ sort_directions = {
 def anchor(parser, token):
     """
     Parses a tag that's supposed to be in this format: {% anchor field title %}
-    """
-    bits = [b.strip('"\'') for b in token.split_contents()]
-    if len(bits) < 2:
-        raise template.TemplateSyntaxError("anchor tag takes at least 1 argument")
+    """ 
     try:
-        title = template.Variable(bits[2])
+
+        tag_name, field, title = token.split_contents()
     except IndexError:
-        title = bits[1].capitalize()
-    return SortAnchorNode(bits[1].strip(), title)
+        tag_name, field = token.split_contents()
+        title = field.capitalize()
+    return SortAnchorNode(field, title)
 
 
 class SortAnchorNode(template.Node):
@@ -42,10 +41,17 @@ class SortAnchorNode(template.Node):
 
     """
     def __init__(self, field, title):
-        self.field = field
-        self.title = title
+        self.field = template.Variable(field)
+        self.title = template.Variable(title)
 
     def render(self, context):
+        self.rendered_field = self.field.resolve(context)
+        try:
+            self.rendered_title = self.title.resolve(context)
+        except template.VariableDoesNotExist:
+            self.rendered_title = self.title
+        except AttributeError:
+            self.rendered_title = self.title
         request = context['request']
         getvars = request.GET.copy()
         if 'sort' in getvars:
@@ -58,7 +64,7 @@ class SortAnchorNode(template.Node):
             del getvars['dir']
         else:
             sortdir = ''
-        if sortby == self.field:
+        if sortby == self.rendered_field:
             getvars['dir'] = sort_directions[sortdir]['inverse']
             icon = sort_directions[sortdir]['icon']
         else:
@@ -68,20 +74,13 @@ class SortAnchorNode(template.Node):
         else:
             urlappend = ''
 
-        try:
-            self.title = self.title.resolve(context).strip()
-        except template.VariableDoesNotExist:
-            self.title = str(self.title.var).strip()
-        except AttributeError:
-            self.title = str(self.title)
-
         if icon:
-            title = "%s %s" % (self.title, icon)
+            title = "%s %s" % (self.rendered_title, icon)
         else:
-            title = self.title
+            title = self.rendered_title
 
-        url = '%s?sort=%s%s' % (request.path, self.field, urlappend)
-        return '<a href="%s" title="%s">%s</a>' % (url, self.title, title)
+        url = '%s?sort=%s%s' % (request.path, self.rendered_field, urlappend)
+        return '<a href="%s" title="%s">%s</a>' % (url, self.rendered_title, title)
 
 
 
